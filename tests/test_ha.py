@@ -292,3 +292,22 @@ async def test_refresh_action_is_admin_only(recorder_mock, enable_custom_integra
         await hass.services.async_call(
             DOMAIN, "refresh", {}, blocking=True, context=Context(user_id=hass_read_only_user.id)
         )
+
+
+async def test_totals_come_from_whole_history(recorder_mock, enable_custom_integrations, hass, vienna, freezer):
+    """Yearly/monthly totals cover everything stored, not just the import window."""
+    freezer.move_to("2026-11-18 10:00:00+01:00")
+    profile = PROFILES[2]
+    client = FakeClient()
+    importer = EnergyImporter(hass, "e1", client, [profile])
+    await importer.async_import(days_back=30)  # 19 Oct .. 17 Nov
+    await async_wait_recording_done(hass)
+    await importer.async_import(days_back=3)  # a short run must not shrink the totals
+    await async_wait_recording_done(hass)
+    importer.async_shutdown()
+    await importer.async_refresh_totals()
+    st = importer.status["profil_a"]
+    # 19-31 Oct = 13 days, one of them 25 h long (end of DST on 25/26 Oct).
+    assert st.kwh_per_month["2026-10"] == {"gemeinschaft": pytest.approx(12 * 9.6 + 10.0), "netz": pytest.approx(12 * 4.8 + 5.0)}
+    assert st.kwh_per_month["2026-11"]["gemeinschaft"] == pytest.approx(9.6 * 17)
+    assert st.kwh_per_year["2026"]["gemeinschaft"] == pytest.approx(12 * 9.6 + 10.0 + 9.6 * 17)

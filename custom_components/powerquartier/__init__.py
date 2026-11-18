@@ -219,6 +219,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerquartierConfigEntry
             async_track_time_change(hass, _schedule_import, hour=hour, minute=minute, second=0)
         )
     entry.async_on_unload(async_call_later(hass, STARTUP_DELAY_S, _schedule_import))
+
+    # Yearly/monthly totals from stored statistics, before the first import.
+    importer.schedule_totals()
+    entry.async_on_unload(importer.async_shutdown)
     entry.async_on_unload(entry.add_update_listener(_reload_on_update))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

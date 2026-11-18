@@ -12,7 +12,8 @@ from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     statistics_during_period,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
@@ -47,6 +48,18 @@ class ProfileStatus:
     hours_written: int = 0
     gaps: list[date] = field(default_factory=list)
     retry_at: datetime | None = None
+    # From the stored statistics (whole history), not from the import window:
+    # {"2026-10": {"gemeinschaft": kWh, "netz": kWh}}
+    kwh_per_month: dict[str, dict[str, float]] = field(default_factory=dict)
+
+    @property
+    def kwh_per_year(self) -> dict[str, dict[str, float]]:
+        years: dict[str, dict[str, float]] = {}
+        for month, values in self.kwh_per_month.items():
+            year = years.setdefault(month[:4], {})
+            for key, kwh in values.items():
+                year[key] = round(year.get(key, 0.0) + kwh, 3)
+        return dict(sorted(years.items()))
 
 
 def statistic_id(slug: str, aspect: str) -> str:
@@ -67,6 +80,36 @@ def _metadata(profile: Profile, aspect: str) -> dict[str, Any]:
     else:  # pragma: no cover
         meta["has_mean"] = False
     return meta
+
+
+HISTORY_START = datetime(2015, 1, 1, tzinfo=timezone.utc)
+TOTALS_DELAY_S = 15
+
+
+async def async_monthly_totals(hass: HomeAssistant, stat_ids: set[str]) -> dict[str, dict[str, float]]:
+    """kWh per local calendar month for each statistic, from the recorder."""
+    recorder = get_instance(hass)
+    result = await recorder.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        HISTORY_START,
+        None,
+        stat_ids,
+        "month",
+        None,
+        {"change"},
+    )
+    out: dict[str, dict[str, float]] = {}
+    for stat_id, rows in result.items():
+        months = out.setdefault(stat_id, {})
+        for row in rows:
+            start = row.get("start")
+            change = row.get("change")
+            if start is None or change is None:
+                continue
+            ts = start if isinstance(start, datetime) else dt_util.utc_from_timestamp(start)
+            months[dt_util.as_local(ts).strftime("%Y-%m")] = round(float(change), 3)
+    return out
 
 
 def local_day_ranges(first: date, last: date) -> list[tuple[date, datetime, datetime]]:
@@ -141,6 +184,7 @@ class EnergyImporter:
         self.status: dict[str, ProfileStatus] = {p.slug: ProfileStatus() for p in profiles}
         self._store = store
         self._gaps: dict[str, set[date]] = {}
+        self._totals_unsub = None
 
     async def async_load(self) -> None:
         data = (await self._store.async_load()) if self._store else None
@@ -237,9 +281,47 @@ class EnergyImporter:
                 _LOGGER.warning("Powerquartier import for %s failed: %s", profile.name, err)
             finally:
                 st.gaps = sorted(self._gaps.get(profile.slug, set()))
+                self.schedule_totals()
                 self._save()
                 async_dispatcher_send(self.hass, SIGNAL_IMPORT_UPDATED, self.entry_id)
         return failed
+
+    async def _update_totals(self, profile: Profile) -> None:
+        ids = {statistic_id(profile.slug, a): ASPECT_SUFFIX[a] for a in ASPECT_SUFFIX}
+        try:
+            monthly = await async_monthly_totals(self.hass, set(ids))
+        except Exception as err:  # noqa: BLE001 - totals are informational
+            _LOGGER.debug("Powerquartier totals for %s failed: %s", profile.slug, err)
+            return
+        merged: dict[str, dict[str, float]] = {}
+        for stat_id, months in monthly.items():
+            for month, kwh in months.items():
+                merged.setdefault(month, {})[ids[stat_id]] = kwh
+        self.status[profile.slug].kwh_per_month = dict(sorted(merged.items()))
+
+    @callback
+    def schedule_totals(self, delay: float = TOTALS_DELAY_S) -> None:
+        """Refresh totals once the recorder has written the new rows."""
+        if self._totals_unsub:
+            self._totals_unsub()
+
+        @callback
+        def _run(_now) -> None:
+            self._totals_unsub = None
+            self.hass.async_create_task(self.async_refresh_totals(), eager_start=False)
+
+        self._totals_unsub = async_call_later(self.hass, delay, _run)
+
+    @callback
+    def async_shutdown(self) -> None:
+        if self._totals_unsub:
+            self._totals_unsub()
+            self._totals_unsub = None
+
+    async def async_refresh_totals(self) -> None:
+        for profile in self.profiles:
+            await self._update_totals(profile)
+        async_dispatcher_send(self.hass, SIGNAL_IMPORT_UPDATED, self.entry_id)
 
     def _update_gaps(
         self,

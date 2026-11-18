@@ -3,6 +3,14 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.7] – 2026-11-18
+
+### Added
+- Status sensor attributes `kwh_pro_jahr` and `kwh_pro_monat` (community and
+  grid kWh per year/month) computed from the stored statistics, i.e. the
+  whole history, refreshed after every import and at startup. Not written
+  to the recorder database.
+
 ## [0.1.6] – 2026-11-18
 
 ### Security

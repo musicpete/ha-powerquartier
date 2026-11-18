@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/musicpete/ha-powerquartier/actions/workflows/ci.yml/badge.svg)](https://github.com/musicpete/ha-powerquartier/actions/workflows/ci.yml)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
-![Version](https://img.shields.io/badge/version-0.1.6-blue)
+![Version](https://img.shields.io/badge/version-0.1.7-blue)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2025.11%2B-03A9F4)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -95,7 +95,7 @@ run (default 30, range 3–90).
 | `sensor.powerquartier_gemeinschaftspreis` | EUR/kWh | Community price of the current slot |
 | `sensor.powerquartier_bezugstarif` | EUR/kWh | Purchase tariff (net) |
 | `sensor.powerquartier_einspeisetarif` | EUR/kWh | Feed-in tariff (net) |
-| `sensor.powerquartier_<profil>_letzter_datentag` | date | Latest imported day; attributes `kwh_gemeinschaft`, `kwh_netz`, `anteil_gemeinschaft_pct`, `vorlaeufig_ab`, `fehlende_tage`, `fehler`, `naechster_versuch` |
+| `sensor.powerquartier_<profil>_letzter_datentag` | date | Latest imported day; attributes `kwh_gemeinschaft`, `kwh_netz`, `anteil_gemeinschaft_pct`, `vorlaeufig_ab`, `fehlende_tage`, `fehler`, `naechster_versuch`, `kwh_pro_jahr`, `kwh_pro_monat` (whole history) |
 
 The `powerquartier:` entries are **long-term statistics**, not entities: use
 them in *statistics graph* cards, the Energy dashboard or Developer tools →

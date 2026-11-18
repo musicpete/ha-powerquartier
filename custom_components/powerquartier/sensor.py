@@ -208,6 +208,7 @@ class TariffSensor(_Base):
 class ProfileStatusSensor(SensorEntity):
     """Last imported day per profile, with that day's kWh and import status."""
 
+    _unrecorded_attributes = frozenset({"kwh_pro_monat", "kwh_pro_jahr"})
     _attr_has_entity_name = True
     _attr_device_class = SensorDeviceClass.DATE
     _attr_icon = "mdi:database-clock"
@@ -258,6 +259,8 @@ class ProfileStatusSensor(SensorEntity):
             "letzter_lauf": st.last_run.isoformat() if st.last_run else None,
             "geschriebene_stunden": st.hours_written,
             "fehler": st.last_error,
+            "kwh_pro_jahr": st.kwh_per_year,
+            "kwh_pro_monat": st.kwh_per_month,
             "fehlende_tage": [d.isoformat() for d in st.gaps],
             "naechster_versuch": st.retry_at.isoformat() if st.retry_at else None,
             "statistik_ids": [
