@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Never commit real data or credentials
+.env
+.env.*
+secrets.yaml
+*.har
+*.pdf
+*.sqlite
+*.db
+*.log
+dumps/
+captures/

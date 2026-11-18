@@ -1,0 +1,93 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Powerquartier-Login",
+        "description": "Zugangsdaten für burgenland.powerquartier.at (Fanclub Burgenland Energieunabhängig). Inoffizielle Integration: liest dieselben Daten wie das Webportal.",
+        "data": {
+          "email": "E-Mail",
+          "password": "Passwort"
+        }
+      },
+      "profiles": {
+        "title": "Profile auswählen",
+        "description": "{count} Profile gefunden. Gewählte Profile werden stündlich als Langzeitstatistik importiert (powerquartier:PROFIL_gemeinschaft / _netz).",
+        "data": {
+          "profiles": "Profile"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Erneut anmelden",
+        "description": "Der Login für {email} ist fehlgeschlagen. Bitte das aktuelle Passwort eingeben.",
+        "data": {
+          "password": "Passwort"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "E-Mail oder Passwort falsch.",
+      "cannot_connect": "Portal nicht erreichbar oder unerwartete Antwort.",
+      "unknown": "Unerwarteter Fehler, siehe Log."
+    },
+    "abort": {
+      "already_configured": "Dieses Konto ist bereits eingerichtet.",
+      "reauth_successful": "Login erneuert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Optionen",
+        "data": {
+          "days_back": "Tage, die bei jedem Lauf neu importiert werden"
+        },
+        "data_description": {
+          "days_back": "Vorläufige Werte werden vom Netzbetreiber nachträglich korrigiert; 30 Tage deckt das ab."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "stromampel": {
+        "name": "Stromampel",
+        "state": {
+          "gemeinschaft": "Gemeinschaft",
+          "gemischt": "Gemischt",
+          "netz": "Netz"
+        }
+      },
+      "naechstes_gemeinschaftsfenster": {
+        "name": "Nächstes Gemeinschaftsfenster"
+      },
+      "gemeinschaftspreis": {
+        "name": "Gemeinschaftspreis aktuell"
+      },
+      "bezugstarif": {
+        "name": "Bezugstarif"
+      },
+      "einspeisetarif": {
+        "name": "Einspeisetarif"
+      },
+      "letzter_datentag": {
+        "name": "{profile} letzter Datentag"
+      }
+    }
+  },
+  "services": {
+    "refresh": {
+      "name": "Daten aktualisieren",
+      "description": "Importiert die letzten N Tage erneut aus dem Portal (stündlich). Mit z. B. 700 Tagen wird die gesamte Historie stündlich nachgeladen.",
+      "fields": {
+        "days": {
+          "name": "Tage",
+          "description": "Anzahl Tage bis gestern."
+        },
+        "profile": {
+          "name": "Profil",
+          "description": "Nur dieses Profil (Kurzname, z. B. profil_a). Leer = alle."
+        }
+      }
+    }
+  }
+}

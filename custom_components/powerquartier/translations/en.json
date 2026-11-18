@@ -1,0 +1,93 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Powerquartier login",
+        "description": "Credentials for burgenland.powerquartier.at. Unofficial integration: reads the same data as the web portal.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      },
+      "profiles": {
+        "title": "Choose profiles",
+        "description": "{count} profiles found. Selected profiles are imported hourly as long-term statistics (powerquartier:PROFILE_gemeinschaft / _netz).",
+        "data": {
+          "profiles": "Profiles"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Sign in again",
+        "description": "Login for {email} failed. Enter the current password.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Wrong email or password.",
+      "cannot_connect": "Portal unreachable or unexpected response.",
+      "unknown": "Unexpected error, see log."
+    },
+    "abort": {
+      "already_configured": "This account is already configured.",
+      "reauth_successful": "Login renewed."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "data": {
+          "days_back": "Days re-imported on each run"
+        },
+        "data_description": {
+          "days_back": "Preliminary values get corrected later by the grid operator; 30 days covers that."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "stromampel": {
+        "name": "Power traffic light",
+        "state": {
+          "gemeinschaft": "Community",
+          "gemischt": "Mixed",
+          "netz": "Grid"
+        }
+      },
+      "naechstes_gemeinschaftsfenster": {
+        "name": "Next community window"
+      },
+      "gemeinschaftspreis": {
+        "name": "Current community price"
+      },
+      "bezugstarif": {
+        "name": "Purchase tariff"
+      },
+      "einspeisetarif": {
+        "name": "Feed-in tariff"
+      },
+      "letzter_datentag": {
+        "name": "{profile} last data day"
+      }
+    }
+  },
+  "services": {
+    "refresh": {
+      "name": "Refresh data",
+      "description": "Re-imports the last N days from the portal (hourly). E.g. 700 days reloads the whole history hourly.",
+      "fields": {
+        "days": {
+          "name": "Days",
+          "description": "Number of days up to yesterday."
+        },
+        "profile": {
+          "name": "Profile",
+          "description": "Only this profile (short name, e.g. profil_a). Empty = all."
+        }
+      }
+    }
+  }
+}
