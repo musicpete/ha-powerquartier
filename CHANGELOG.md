@@ -3,6 +3,13 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+
+## [0.1.8] – 2026-11-18
+
+### Fixed
+- The last imported day (and its values) is kept across restarts, so the
+  "last data day" sensors are no longer unknown until the next import.
+
 ## [0.1.7] – 2026-11-18
 
 ### Added

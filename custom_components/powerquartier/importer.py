@@ -190,8 +190,19 @@ class EnergyImporter:
         data = (await self._store.async_load()) if self._store else None
         for slug, days in ((data or {}).get("gaps") or {}).items():
             self._gaps[slug] = {date.fromisoformat(d) for d in days}
+        saved = (data or {}).get("last") or {}
         for slug, st in self.status.items():
             st.gaps = sorted(self._gaps.get(slug, set()))
+            # restore the last imported day so sensors are not unknown after a restart
+            if (last := saved.get(slug)) and last.get("day"):
+                try:
+                    st.last_day = date.fromisoformat(last["day"])
+                    st.preliminary_from = (
+                        date.fromisoformat(last["preliminary_from"]) if last.get("preliminary_from") else None
+                    )
+                except (TypeError, ValueError):
+                    continue
+                st.last_day_kwh = {k: float(v) for k, v in (last.get("kwh") or {}).items()}
 
     def _save(self) -> None:
         if self._store:
@@ -200,7 +211,16 @@ class EnergyImporter:
                     "gaps": {
                         slug: sorted(d.isoformat() for d in days)
                         for slug, days in self._gaps.items()
-                    }
+                    },
+                    "last": {
+                        slug: {
+                            "day": st.last_day.isoformat(),
+                            "kwh": st.last_day_kwh,
+                            "preliminary_from": st.preliminary_from.isoformat() if st.preliminary_from else None,
+                        }
+                        for slug, st in self.status.items()
+                        if st.last_day
+                    },
                 },
                 5,
             )
@@ -370,5 +390,6 @@ class EnergyImporter:
             }
             prelim = [d for d, e in filled if e.preliminary]
             st.preliminary_from = prelim[0] if prelim else None
+            self._save()
         st.hours_written = written
         _LOGGER.debug("Powerquartier %s: wrote %s rows", profile.name, written)

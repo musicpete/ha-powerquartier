@@ -311,3 +311,28 @@ async def test_totals_come_from_whole_history(recorder_mock, enable_custom_integ
     assert st.kwh_per_month["2026-10"] == {"gemeinschaft": pytest.approx(12 * 9.6 + 10.0), "netz": pytest.approx(12 * 4.8 + 5.0)}
     assert st.kwh_per_month["2026-11"]["gemeinschaft"] == pytest.approx(9.6 * 17)
     assert st.kwh_per_year["2026"]["gemeinschaft"] == pytest.approx(12 * 9.6 + 10.0 + 9.6 * 17)
+
+
+async def test_last_day_survives_restart(hass):
+    """The last imported day is restored from storage, not unknown after a restart."""
+
+    class FakeStore:
+        def __init__(self, data):
+            self.data = data
+
+        async def async_load(self):
+            return self.data
+
+        def async_delay_save(self, func, _delay):
+            self.data = func()
+
+    profile = Profile("id-a", "Profil-A")
+    slug = profile.slug
+    store = FakeStore({"gaps": {}, "last": {slug: {"day": "2000-01-31", "kwh": {"netz": 1.5}, "preliminary_from": None}}})
+    importer = EnergyImporter(hass, "e1", None, [profile], store)
+    await importer.async_load()
+    st = importer.status[slug]
+    assert st.last_day.isoformat() == "2000-01-31"
+    assert st.last_day_kwh == {"netz": 1.5}
+    importer._save()
+    assert store.data["last"][slug]["day"] == "2000-01-31"
