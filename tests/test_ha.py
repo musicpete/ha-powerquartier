@@ -187,6 +187,7 @@ async def test_sensors_and_service(recorder_mock, enable_custom_integrations, ha
     assert ampel.attributes["anteil_gemeinschaft_naechste_24h_pct"] == 4
     assert ampel.attributes["forecast"][0]["erzeugung_kwh"] == 1.0
     assert ampel.attributes["prognose_bis"]
+    assert ampel.attributes["forecast"][0]["vorlaeufig"] is False
     tarif = next(s for e, s in states.items() if "bezugstarif" in e)
     assert float(tarif.state) == 0.12
     nxt = next(s for e, s in states.items() if "gemeinschaftsfenster" in e)

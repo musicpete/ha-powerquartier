@@ -3,6 +3,12 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.10] – 2026-11-19
+
+### Added
+- Stromampel `forecast` entries carry the portal's preliminary flag
+  (`vorlaeufig`), so provisional values can be told apart from final ones.
+
 ## [0.1.9] – 2026-11-19
 
 ### Changed

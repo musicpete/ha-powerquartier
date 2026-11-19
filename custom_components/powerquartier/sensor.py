@@ -119,6 +119,7 @@ class AmpelSensor(_Base):
                     "status": s.availability,
                     "preis": s.price,
                     "prognose": s.forecast,
+                    "vorlaeufig": s.preliminary,
                     "erzeugung_kwh": s.production_kwh,
                     "verbrauch_kwh": s.consumption_kwh,
                 }
