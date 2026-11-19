@@ -75,7 +75,7 @@ class FakeClient:
         slots = [
             AmpelSlot(now + timedelta(minutes=15 * i),
                       "gemeinschaft" if 0 <= i < 4 else "netz", i >= 0, False, 0.1, 1.0, 1.0)
-            for i in range(-4, 96)
+            for i in range(-4, 192)
         ]
         tariff = Tariff("Beispieltarif", "2025-01-01",
                         [PriceSpec("Bezugstarif", "consumption", "fixedRate", 0.12, "EUR"),
@@ -182,7 +182,11 @@ async def test_sensors_and_service(recorder_mock, enable_custom_integrations, ha
         "sensor.powerquartier_profil_a_letzter_datentag", "sensor.powerquartier_stromampel"]
     ampel = next(s for e, s in states.items() if "stromampel" in e)
     assert ampel.state == "gemeinschaft"
-    assert len(ampel.attributes["forecast"]) == 96
+    # whole upcoming horizon (2 days in the fake), share still over 24 h
+    assert len(ampel.attributes["forecast"]) == 192
+    assert ampel.attributes["anteil_gemeinschaft_naechste_24h_pct"] == 4
+    assert ampel.attributes["forecast"][0]["erzeugung_kwh"] == 1.0
+    assert ampel.attributes["prognose_bis"]
     tarif = next(s for e, s in states.items() if "bezugstarif" in e)
     assert float(tarif.state) == 0.12
     nxt = next(s for e, s in states.items() if "gemeinschaftsfenster" in e)

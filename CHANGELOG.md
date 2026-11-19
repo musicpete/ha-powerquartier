@@ -3,6 +3,18 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.9] – 2026-11-19
+
+### Changed
+- Stromampel `forecast` attribute now holds every upcoming slot the portal
+  delivers (several days), not just the next 24 hours.
+  `anteil_gemeinschaft_naechste_24h_pct` is still computed over 24 hours.
+
+### Added
+- `forecast` entries carry the community's expected production and
+  consumption per slot (`erzeugung_kwh`, `verbrauch_kwh`).
+- Attribute `prognose_bis`: end of the available forecast.
+
 ## [0.1.8] – 2026-11-18
 
 ### Fixed

@@ -101,20 +101,26 @@ class AmpelSensor(_Base):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         now = dt_util.utcnow()
-        upcoming = [s for s in self.data.slots if s.start + SLOT > now][:96]
+        upcoming = [s for s in self.data.slots if s.start + SLOT > now]
+        next_24h = upcoming[:96]
         share = (
-            round(100 * sum(s.availability == "gemeinschaft" for s in upcoming) / len(upcoming))
-            if upcoming
+            round(100 * sum(s.availability == "gemeinschaft" for s in next_24h) / len(next_24h))
+            if next_24h
             else None
         )
         return {
             "anteil_gemeinschaft_naechste_24h_pct": share,
+            "prognose_bis": (
+                dt_util.as_local(upcoming[-1].start + SLOT).isoformat() if upcoming else None
+            ),
             "forecast": [
                 {
                     "start": dt_util.as_local(s.start).isoformat(),
                     "status": s.availability,
                     "preis": s.price,
                     "prognose": s.forecast,
+                    "erzeugung_kwh": s.production_kwh,
+                    "verbrauch_kwh": s.consumption_kwh,
                 }
                 for s in upcoming
             ],
